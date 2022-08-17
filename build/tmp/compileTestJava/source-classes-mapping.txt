@@ -1,0 +1,2 @@
+com/smartcom/api/SmartcomApplicationTests.java
+ com.smartcom.api.SmartcomApplicationTests
