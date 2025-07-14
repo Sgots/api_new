@@ -30,7 +30,7 @@ public class EmailService {
         this.mailSender.setHost("smtp.hostinger.com");
         this.mailSender.setPort(587);
         this.mailSender.setUsername("support@nimbusengineering.co.bw");
-        this.mailSender.setPassword("56Support10*#&$");
+        this.mailSender.setPassword("Nimbus@aws@2022");
         Properties props = this.mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.auth", "true");

@@ -29,6 +29,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.smartcom.api.service.MqttSubscriberControl;
+import com.smartcom.api.service.MqttSubscriberData;
+import com.smartcom.api.service.MqttSubscriberNotification;
+import com.smartcom.api.service.MqttSubscriberPool;
 import io.swagger.models.auth.In;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -49,6 +53,14 @@ public class MeterController {
     @Autowired
     private DeviceRepository deviceRepository;
 
+    @Autowired
+    private MqttSubscriberPool mqttSubscriberPool;
+    @Autowired
+    private MqttSubscriberControl mqttSubscriberControl;
+    @Autowired
+    private MqttSubscriberData mqttSubscriberData;
+    @Autowired
+    private MqttSubscriberNotification mqttSubscriberNotification;
     @GetMapping(value = {"/logs/{meter_id}"})
     public ResponseEntity<?> getLogs(@PathVariable(value = "meter_id") String meter_id) {
         List meterLogs = this.meterLogRepository.findAllByConsumption(meter_id);
@@ -65,6 +77,14 @@ public class MeterController {
             return new ResponseEntity((Object) ("No User found with this " + meter_id), HttpStatus.NOT_FOUND);
         }
         return ResponseEntity.status((HttpStatus) HttpStatus.OK).body(Map.of("error", "false", "message", "retrieved", "meterLogs", meterLogs));
+    }
+    @GetMapping(value = {"/start/{meter_id}"})
+    public ResponseEntity<?> startMqtt(@PathVariable(value = "meter_id") String meter_id) throws Exception {
+    mqttSubscriberPool.run();
+    mqttSubscriberControl.run();
+    mqttSubscriberNotification.run();
+    mqttSubscriberData.run();
+        return ResponseEntity.status((HttpStatus) HttpStatus.OK).body(Map.of("error", "false", "message", "retrieved"));
     }
 
     @GetMapping(value = {"/logs/month/{meter_id}"})
@@ -188,5 +208,12 @@ meterdataresponse.add(meterdataresponse4);
         List meterdataresponse1 = this.meterRepo.findAllSockets(macaddress, (Pageable)paging);
         return ResponseEntity.status((HttpStatus)HttpStatus.OK).body(Map.of("error", "false", "message", "retrieved", "deviceSS", meterdataresponse1));
     }*/
+
+    @GetMapping(value = {"/dataresponse/{macaddress}"})
+    public ResponseEntity<?> getDataResponse(@PathVariable(value = "macaddress") String macaddress) throws SQLException {
+        Meterdataresponse meterdataresponse = meterRepo.meterData(macaddress);
+
+        return ResponseEntity.status((HttpStatus) HttpStatus.OK).body(Map.of("error", "false", "message", "retrieved", "data", meterdataresponse));
+    }
 }
 

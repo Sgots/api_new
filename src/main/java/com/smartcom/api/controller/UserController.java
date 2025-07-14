@@ -105,7 +105,7 @@ public class UserController {
             registrationEmail.setSubject("Registration Confirmation");
             registrationEmail.setText("To confirm your e-mail address, please click the link below:\n" + this.webServerUrl + "/users/confirm?token=" + user.getConfirmationToken());
             registrationEmail.setFrom("support@nimbusengineering.co.bw");
-            this.emailService.sendEmail(registrationEmail);
+         // this.emailService.sendEmail(registrationEmail);
             return ResponseEntity.status((HttpStatus) HttpStatus.OK).body(Map.of("firstname", user.getFirstName(), "lastname", user.getLastName(), "error", "false", "id", user.getUserid(), "user", user));
         }
         return ResponseEntity.status((HttpStatus) HttpStatus.CREATED).build();
@@ -169,12 +169,13 @@ public class UserController {
     public void reset(@Valid @RequestBody User user) {
         User resetUser = this.userService.resetUser(user);
         if (resetUser != null) {
-            SimpleMailMessage registrationEmail = new SimpleMailMessage();
+            System.out.println(resetUser.getPassword());
+           /* SimpleMailMessage registrationEmail = new SimpleMailMessage();
             registrationEmail.setTo(user.getEmail());
             registrationEmail.setSubject("Temporary Password Sent From " + this.webServerUrl);
             registrationEmail.setText("To access your account, please use this temporary password:  " + resetUser.getPassword() + ".\r\nNOTE: This email was sent from an automated system. Please do not reply.");
             registrationEmail.setFrom("support@nimbusengineering.co.bw");
-            this.emailService.sendEmail(registrationEmail);
+            this.emailService.sendEmail(registrationEmail);*/
         }
     }
 

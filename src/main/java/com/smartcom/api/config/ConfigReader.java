@@ -1,4 +1,4 @@
-package utils;
+package com.smartcom.api.config;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -13,7 +13,10 @@ public class ConfigReader {
         properties = new Properties();
         try
         {
-            FileInputStream fileInputStream = new FileInputStream("src/test/java/config/config.properties");
+          //  FileInputStream fileInputStream = new FileInputStream("C:\\Users\\kraym\\Desktop\\Smartcom\\application.properties");
+
+           // FileInputStream fileInputStream = new FileInputStream("src/main/resources/application.properties");
+         FileInputStream fileInputStream = new FileInputStream("/root/config/application.properties");
             properties.load(fileInputStream);
         }
         catch (FileNotFoundException fileNotFoundException)

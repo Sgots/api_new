@@ -15,6 +15,7 @@
 package com.smartcom.api.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.smartcom.api.config.ConfigReader;
 import com.smartcom.api.model.Devices;
 import com.smartcom.api.model.Events;
 import com.smartcom.api.model.Recharge;
@@ -29,11 +30,17 @@ import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
+
 
 @Service
 public class MessagingService {
+    private static ConfigReader configReader = new ConfigReader();
+    private static Properties properties = new Properties(configReader.init_prop());
+    public  String mqttServerUrl = properties.getProperty("mqttServerUrl");
+
     public boolean EnergyNotif(String deviceID, Integer estateid, String deviceName) throws MqttPersistenceException, MqttException, JsonProcessingException {
-        MqttClient client = new MqttClient("tcp://18.228.18.217:1883", MqttClient.generateClientId());
+        MqttClient client = new MqttClient(mqttServerUrl, MqttClient.generateClientId());
         client.connect();
         String topic = estateid + "/" + deviceID + "/EnergyNotification";
         String payload = "{\"command\":\"notification\", \"deviceID\":\"" + deviceID + "\", \"status\":\"Energy usage high " + deviceName + "\" }";
@@ -49,7 +56,7 @@ public class MessagingService {
     }
 
     public boolean EnergyNotifOff(String deviceID, Integer estateid, String deviceName) throws MqttPersistenceException, MqttException, JsonProcessingException {
-        MqttClient client = new MqttClient("tcp://18.228.18.217:1883", MqttClient.generateClientId());
+        MqttClient client = new MqttClient(mqttServerUrl, MqttClient.generateClientId());
         client.connect();
         String topic = estateid + "/" + deviceID + "/EnergyNotification";
         String payload = "{\"command\":\"notification\", \"deviceID\":\"" + deviceID + "\", \"status\":\"Energy okay " + deviceName + "\" }";
@@ -65,7 +72,7 @@ public class MessagingService {
     }
 
     public boolean PowerNotif(String deviceID, Integer estateid, String deviceName) throws MqttPersistenceException, MqttException, JsonProcessingException {
-        MqttClient client = new MqttClient("tcp://18.228.18.217:1883", MqttClient.generateClientId());
+        MqttClient client = new MqttClient(mqttServerUrl, MqttClient.generateClientId());
         client.connect();
         String topic = estateid + "/" + deviceID + "/PowerNotification";
         String payload = "{\"command\":\"notification\", \"deviceID\":\"" + deviceID + "\", \"status\":\"Power usage high in " + deviceName + "\" }";
@@ -81,7 +88,7 @@ public class MessagingService {
     }
 
     public boolean PowerNotifOff(String deviceID, Integer estateid, String deviceName) throws MqttPersistenceException, MqttException, JsonProcessingException {
-        MqttClient client = new MqttClient("tcp://18.228.18.217:1883", MqttClient.generateClientId());
+        MqttClient client = new MqttClient(mqttServerUrl, MqttClient.generateClientId());
         client.connect();
         String topic = estateid + "/" + deviceID + "/PowerNotification";
         String payload = "{\"command\":\"notification\", \"deviceID\":\"" + deviceID + "\", \"status\":\"Power okay in " + deviceName + "\" }";
@@ -97,7 +104,7 @@ public class MessagingService {
     }
 
     public boolean CreditNotif(String deviceID, Integer estateid, String deviceName) throws MqttPersistenceException, MqttException, JsonProcessingException {
-        MqttClient client = new MqttClient("tcp://18.228.18.217:1883", MqttClient.generateClientId());
+        MqttClient client = new MqttClient(mqttServerUrl, MqttClient.generateClientId());
         client.connect();
         String topic = estateid + "/" + deviceID + "/CreditNotification";
         String payload = "{\"command\":\"notification\", \"deviceID\":\"" + deviceID + "\", \"status\":\"Credit low in " + deviceName + "\" }";
@@ -113,7 +120,7 @@ public class MessagingService {
     }
 
     public boolean CreditNotifOff(String deviceID, Integer estateid, String deviceName) throws MqttPersistenceException, MqttException, JsonProcessingException {
-        MqttClient client = new MqttClient("tcp://18.228.18.217:1883", MqttClient.generateClientId());
+        MqttClient client = new MqttClient(mqttServerUrl, MqttClient.generateClientId());
         client.connect();
         String topic = estateid + "/" + deviceID + "/CreditNotification";
         String payload = "{\"command\":\"notification\", \"deviceID\":\"" + deviceID + "\", \"status\":\"Credit okay in " + deviceName + "\" }";
@@ -129,7 +136,7 @@ public class MessagingService {
     }
 
     public boolean publish(Devices devices) throws MqttPersistenceException, MqttException, JsonProcessingException {
-        MqttClient client = new MqttClient("tcp://18.228.18.217:1883", MqttClient.generateClientId());
+        MqttClient client = new MqttClient(mqttServerUrl, MqttClient.generateClientId());
         client.connect();
         String topic = devices.getEstate().getEstateid() + "/" + devices.getMacaddress() + "/configurationReady";
         String payload = "{\"command\":\"configurationReady\", \"deviceID\":\"" + devices.getMacaddress() + "\", \"status\":\"1\" }";
@@ -146,7 +153,7 @@ public class MessagingService {
 
     public boolean publishStateOFF(Devices devices, String mac) throws MqttException, JsonProcessingException {
 
-        MqttClient client = new MqttClient("tcp://18.228.18.217:1883", MqttClient.generateClientId());
+        MqttClient client = new MqttClient(mqttServerUrl, MqttClient.generateClientId());
         client.connect();
         String topic = devices.getEstate().getEstateid() + "/" + mac + "/control/state";
         String payload = "{\"command\":\"controlRequest\", \"state\": \"OFF\",\"deviceID\": \"" + devices.getMacaddress() + "\" }";
@@ -164,7 +171,7 @@ public class MessagingService {
 
     public boolean publishStateOn(Devices devices, String mac) throws MqttException, JsonProcessingException {
 
-        MqttClient client = new MqttClient("tcp://18.228.18.217:1883", MqttClient.generateClientId());
+        MqttClient client = new MqttClient(mqttServerUrl, MqttClient.generateClientId());
         client.connect();
         String topic = devices.getEstate().getEstateid() + "/" + mac + "/control/state";
         String payload = "{\"command\":\"controlRequest\", \"state\": \"ON\",\"deviceID\": \"" + devices.getMacaddress() + "\" }";
@@ -182,7 +189,7 @@ public class MessagingService {
 
     public boolean publishState2(Devices devices, Devices devices1) throws MqttException, JsonProcessingException {
         if (devices1.getActive()) {
-            MqttClient client = new MqttClient("tcp://18.228.18.217:1883", MqttClient.generateClientId());
+            MqttClient client = new MqttClient(mqttServerUrl, MqttClient.generateClientId());
             client.connect();
             String topic = devices.getEstate().getEstateid() + "/" + devices.getMacaddress() + "/control/state";
             String payload = "{\"command\":\"controlRequest\", \"state\": \"ON\",\"deviceID\": \"" + devices.getMacaddress() + "\" }";
@@ -195,7 +202,7 @@ public class MessagingService {
             client.publish(topic, mqttMessage);
             client.disconnect();
         } else if (!devices1.getActive()) {
-            MqttClient client = new MqttClient("tcp://18.228.18.217:1883", MqttClient.generateClientId());
+            MqttClient client = new MqttClient(mqttServerUrl, MqttClient.generateClientId());
             client.connect();
             String topic = devices.getEstate().getEstateid() + "/" + devices.getMacaddress() + "/control/state";
             String payload = "{\"command\":\"controlRequest\", \"state\": \"OFF\",\"deviceID\": \"" + devices.getMacaddress() + "\" }";
@@ -212,7 +219,7 @@ public class MessagingService {
     }
 
     public boolean recharge(Recharge recharge, Devices devices) throws MqttException {
-        MqttClient client = new MqttClient("tcp://18.228.18.217:1883", MqttClient.generateClientId());
+        MqttClient client = new MqttClient(mqttServerUrl, MqttClient.generateClientId());
         client.connect();
         String topic = devices.getEstate().getEstateid() + "/" + devices.getMacaddress() + "/recharge";
         String payload = "{\"command\":\"rechargeRequest\", \"rechargeToken\":'" + recharge.getToken() + "', \"deviceID\":'" + devices.getMacaddress() + "' }";
@@ -228,7 +235,7 @@ public class MessagingService {
     }
 
     public boolean rechargeNotification(String deviceID, Integer estateid) throws MqttException {
-        MqttClient client = new MqttClient("tcp://18.228.18.217:1883", MqttClient.generateClientId());
+        MqttClient client = new MqttClient(mqttServerUrl, MqttClient.generateClientId());
         client.connect();
         String topic = estateid + "/" + deviceID + "/notifications/recharge";
         String payload = "{\"command\":\"notification\", \"deviceID\":\"" + deviceID + "\", \"status\":\"Recharge succesful\" }";
@@ -244,7 +251,7 @@ public class MessagingService {
     }
 
     public boolean rechargeNotificationFail(String deviceID, Integer estateid) throws MqttException {
-        MqttClient client = new MqttClient("tcp://18.228.18.217:1883", MqttClient.generateClientId());
+        MqttClient client = new MqttClient(mqttServerUrl, MqttClient.generateClientId());
         client.connect();
         String topic = estateid + "/" + deviceID + "/notifications/recharge";
         String payload = "{\"command\":\"notification\", \"deviceID\":\"" + deviceID + "\", \"status\":\"Recharge failed\" }";
@@ -260,7 +267,7 @@ public class MessagingService {
     }
 
     public boolean announcementAlert(String title) throws MqttException {
-        MqttClient client = new MqttClient("tcp://18.228.18.217:1883", MqttClient.generateClientId());
+        MqttClient client = new MqttClient(mqttServerUrl, MqttClient.generateClientId());
         String deviceID = "Announcement";
         client.connect();
         String topic = "announcement/alert";
@@ -277,7 +284,7 @@ public class MessagingService {
     }
 
     public boolean publishEvent(List<Events> events, Integer estateid, String deviceID) throws MqttException {
-        MqttClient client = new MqttClient("tcp://18.228.18.217:1883", MqttClient.generateClientId());
+        MqttClient client = new MqttClient(mqttServerUrl, MqttClient.generateClientId());
         client.connect();
         String topic = estateid + "/timedEventsTopic";
         JSONObject jsonObject = new JSONObject();

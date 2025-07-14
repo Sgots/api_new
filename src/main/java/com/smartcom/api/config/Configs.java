@@ -1,9 +1,8 @@
-package configs;
+package com.smartcom.api.config;
 
 
 
 
-import utils.ConfigReader;
 
 import java.util.HashMap;
 import java.util.Properties;
