@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.springframework.context.annotation.ComponentScan;
 
 import java.util.Date;
 import javax.persistence.Entity;

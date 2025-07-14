@@ -8,28 +8,28 @@ import com.smartcom.api.exception.BadRequestException;
 import com.smartcom.api.model.*;
 import com.smartcom.api.repository.*;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
-import java.util.Base64;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
+import io.swagger.models.auth.In;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import static java.lang.System.out;
 
 @Service
 public class DeviceService {
     boolean isCancelled = false;
+
 
     @Autowired
     private EstateRepository estateRepository;
@@ -41,6 +41,12 @@ public class DeviceService {
     private UserToEstateRepository userToEstateRepository;
     @Autowired
     private RechargeRepo rechargeRepo;
+
+    @Value(value = "${webServerUrlPost}")
+    private String webServerUrl;
+
+    @Value(value = "${mqttServerUrl}")
+    private String broker;
     ServerSocket server_socket;
     public int PORT = 7777;
     private static final Random RANDOM = new SecureRandom();
@@ -141,8 +147,8 @@ public class DeviceService {
             topic.put("configurationReadyTopic", devices.getEstate().getEstateid() + "/" + devices.getMacaddress() + "/configurationReady");
             topic.put("notificationTopic", devices.getEstate().getEstateid() + "/" + devices.getMacaddress() + "/notifications");
 
-            set.put("serverConfigurationUrl", "http://18.228.18.217:9000/echoPost");
-            set.put("mqttServerURL", "tcp://18.228.18.217:1883");
+            set.put("serverConfigurationUrl", webServerUrl);
+            set.put("mqttServerURL", broker);
             set.put("mqttUsername", "admin");
             set.put("mqttPassword", "admin");
             dev.put("dataFrequency", estateExists.getMeterdatafreq());
@@ -573,8 +579,8 @@ public class DeviceService {
                 topic.put("configurationReadyTopic", master.getEstate().getEstateid() + "/" + master.getMacaddress() + "/configurationReady");
                 topic.put("notificationTopic", master.getEstate().getEstateid() + "/" + master.getMacaddress() + "/notifications");
 
-                set.put("serverConfigurationUrl", "http://18.228.18.217:9000/echoPost");
-                set.put("mqttServerURL", "tcp://18.228.18.217:1883");
+                set.put("serverConfigurationUrl", webServerUrl);
+                set.put("mqttServerURL", broker);
                 set.put("mqttUsername", "admin");
                 set.put("mqttPassword", "admin");
                 dev.put("dataFrequency", estateExists.getMeterdatafreq());
@@ -643,7 +649,7 @@ public class DeviceService {
     public boolean updateAttachedDevices(Devices device) throws IOException, MqttException {
         Devices devices = this.deviceRepository.findByDeviceid(device.getDeviceid());
         AttachedDevices attachedDevices = attachedDevicesRepo.findByDeviceID(device.getMacaddress());
-        Estate estate = estateRepository.findByEstateid(device.getEstate().getEstateid());
+        Estate estate = estateRepository.findByEstateid(devices.getEstate().getEstateid());
         Estate estateExists = estateRepository.findByEstateaddress(estate.getEstateaddress());
         if (devices == null) {
             throw new BadRequestException(device.getDeviceid() + " is not registered.");
@@ -713,8 +719,8 @@ public class DeviceService {
             topic.put("configurationReadyTopic", master.getEstate().getEstateid() + "/" + master.getMacaddress() + "/configurationReady");
             topic.put("notificationTopic", master.getEstate().getEstateid() + "/" + master.getMacaddress() + "/notifications");
 
-            set.put("serverConfigurationUrl", "http://18.228.18.217:9000/echoPost");
-            set.put("mqttServerURL", "tcp://18.228.18.217:1883");
+            set.put("serverConfigurationUrl", webServerUrl);
+            set.put("mqttServerURL", broker);
             set.put("mqttUsername", "admin");
             set.put("mqttPassword", "admin");
             dev.put("dataFrequency", estateExists.getMeterdatafreq());
@@ -846,8 +852,8 @@ public class DeviceService {
             topic.put("configurationReadyTopic", master.getEstate().getEstateid() + "/" + master.getMacaddress() + "/configurationReady");
             topic.put("notificationTopic", master.getEstate().getEstateid() + "/" + master.getMacaddress() + "/notifications");
 
-            set.put("serverConfigurationUrl", "http://18.228.18.217:9000/echoPost");
-            set.put("mqttServerURL", "tcp://18.228.18.217:1883");
+            set.put("serverConfigurationUrl", webServerUrl);
+            set.put("mqttServerURL", broker);
             set.put("mqttUsername", "admin");
             set.put("mqttPassword", "admin");
             dev.put("dataFrequency", estateExists.getMeterdatafreq());
@@ -983,8 +989,8 @@ public class DeviceService {
                 topic.put("configurationReadyTopic", devices.getEstate().getEstateid() + "/" + device_mac + "/configurationReady");
                 topic.put("notificationTopic", devices.getEstate().getEstateid() + "/" + device_mac + "/notifications");
 
-                set.put("serverConfigurationUrl", "http://18.228.18.217:9000/echoPost");
-                set.put("mqttServerURL", "tcp://18.228.18.217:1883");
+                set.put("serverConfigurationUrl", webServerUrl);
+                set.put("mqttServerURL", broker);
                 set.put("mqttUsername", "admin");
                 set.put("mqttPassword", "admin");
                 dev.put("dataFrequency", estate.getMeterdatafreq());
@@ -1049,5 +1055,191 @@ public class DeviceService {
         }
         return true;
     }
+
+    public void runStartUpCmd() {
+        Runtime run = Runtime.getRuntime();
+//The best possible I found is to construct a command which you want to execute
+//as a string and use that in exec. If the batch file takes command line arguments
+//the command can be constructed a array of strings and pass the array as input to
+//the exec method. The command can also be passed externally as input to the method.
+
+        Process p = null;
+        Process p2 = null;
+        Process p3 = null;
+
+        String cmd = "sudo find . -name 'paho*' -exec rm -r -v {}" + " \\" + ";";
+        out.println(cmd);
+        try {
+            p = run.exec(cmd);
+            p.getErrorStream();
+            p.waitFor();
+
+
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            System.out.println("ERROR.RUNNING.CMD");
+
+        } finally {
+            p.destroy();
+
+        }
+    }
+
+    public void addRechargeHistory(RechargeHistoryModel rechargeHistoryModel) {
+        rechargeRepo.save(rechargeHistoryModel);
+
+
+    }
+
+    public void addNotifications(Notifications notifications, Boolean online) throws IOException {
+        JSONObject jsonObject = new JSONObject(notifications);
+        Queue<JSONObject> queue = new LinkedList<>();
+        queue.add(jsonObject);
+        System.out.println("Peeked element: " + queue);
+
+        deviceRepository.findByDeviceIdOnline(notifications.getDevice_id(), online);
+
+
+        try {
+            File myObj = new File(notifications.getDevice_id() + "_noti" + ".txt");
+            if (myObj.createNewFile()) {
+                System.out.println("File created: " + myObj.getName());
+                BufferedWriter writer = new BufferedWriter(new FileWriter(notifications.getDevice_id() + "_noti" + ".txt"));
+                writer.write(jsonObject.toString());
+                writer.close();
+
+            } else {
+                if (myObj.length() == 0) {
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(notifications.getDevice_id() + "_noti" + ".txt"));
+                    writer.write(jsonObject.toString());
+                    writer.close();
+                } else {
+                    FileInputStream fis = null;
+                    //  File file=new File("root/"+mac+".txt");
+                    BufferedReader reader = new BufferedReader(new FileReader(notifications.getDevice_id() + "_noti" + ".txt"));
+                    String json = "";
+                    try {
+                        StringBuilder sb = new StringBuilder();
+                        String line = reader.readLine();
+
+                        while (line != null) {
+                            sb.append(line);
+                            sb.append("\n");
+                            line = reader.readLine();
+                        }
+                        json = sb.toString();
+                    } finally {
+                        reader.close();
+                    }
+                    JSONObject jsonObject1 = new JSONObject(json);
+                    JSONObject jsonObject2 = new JSONObject();
+                    jsonObject2 = queue.peek();
+
+                    out.println(jsonObject1 + "  first");
+                    out.println(jsonObject2 + "   second");
+                    Integer creditThresholdState = jsonObject1.getInt("credit_notification");
+                    Integer powerThresholdState = jsonObject1.getInt("power_notification");
+                    Integer energyThresholdState = jsonObject1.getInt("energy_notification");
+
+                    Integer creditThresholdState1 = jsonObject2.getInt("credit_notification");
+                    Integer powerThresholdState1 = jsonObject2.getInt("power_notification");
+                    Integer energyThresholdState1 = jsonObject2.getInt("energy_notification");
+
+                    if (creditThresholdState.equals(creditThresholdState1)) {
+
+                    } else {
+                        //update
+                        if (creditThresholdState1.equals(1)) {
+                            Devices devices = deviceRepository.findByMacaddress(notifications.getDevice_id());
+                            String deviceMac = devices.getMacaddress();
+                            String deviceName = devices.getDevice_name();
+                            Integer credit_action1 = devices.getCreditAction();
+                            Integer estateid = devices.getEstate().getEstateid();
+
+                            CreditNotification(deviceMac, credit_action1, estateid, deviceName);
+
+                        } else if (creditThresholdState1.equals(0)) {
+
+                            Devices devices = deviceRepository.findByMacaddress(notifications.getDevice_id());
+                            String deviceMac = devices.getMacaddress();
+                            String deviceName = devices.getDevice_name();
+                            Integer credit_action1 = devices.getCreditAction();
+                            Integer estateid = devices.getEstate().getEstateid();
+                            CreditNotificationOff(deviceMac, credit_action1, estateid, deviceName);
+                        }
+                    }
+
+                    if (powerThresholdState.equals(powerThresholdState1)) {
+
+                    } else {
+                        if (powerThresholdState1.equals(1)) {
+                            out.println("we got this far");
+                            Devices devices = deviceRepository.findByMacaddress(notifications.getDevice_id());
+                            String deviceMac = devices.getMacaddress();
+                            String deviceName = devices.getDevice_name();
+                            Integer power_action = devices.getPowerAction();
+                            Integer estateid = devices.getEstate().getEstateid();
+
+                            out.println();
+
+                            PowerNotification(deviceMac, power_action, estateid, deviceName);
+
+                        } else if (powerThresholdState1.equals(0)) {
+
+                            Devices devices = deviceRepository.findByMacaddress(notifications.getDevice_id());
+                            String deviceMac = devices.getMacaddress();
+                            String deviceName = devices.getDevice_name();
+                            Integer powerAction = devices.getPowerAction();
+                            Integer estateid = devices.getEstate().getEstateid();
+                            PowerNotificationOff(deviceMac, powerAction, estateid, deviceName);
+                        }
+                    }
+                    if (energyThresholdState.equals(energyThresholdState1)) {
+
+                    } else {
+                        if (energyThresholdState1.equals(1)) {
+                            Devices devices = deviceRepository.findByMacaddress(notifications.getDevice_id());
+                            String deviceMac = devices.getMacaddress();
+                            String deviceName = devices.getDevice_name();
+                            Integer energyAction = devices.getEnergyAction();
+                            Integer estateid = devices.getEstate().getEstateid();
+
+                            EnergyNotification(deviceMac, energyAction, estateid, deviceName);
+
+                        } else if (energyThresholdState1.equals(0)) {
+
+                            Devices devices = deviceRepository.findByMacaddress(notifications.getDevice_id());
+                            String deviceMac = devices.getMacaddress();
+                            String deviceName = devices.getDevice_name();
+                            Integer energyAction = devices.getEnergyAction();
+                            Integer estateid = devices.getEstate().getEstateid();
+                            EnergyNotificationOff(deviceMac, energyAction, estateid, deviceName);
+                        }
+                    }
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(notifications.getDevice_id() + "_noti" + ".txt"));
+                  writer.write("");
+                    writer.write(jsonObject.toString());
+                    writer.close();
+                }
+            }
+
+            // code for threshold escaped
+            queue.remove();
+          /*  FileWriter myWriter = new FileWriter(notifications.getDevice_id() + "_noti_" + ".txt");
+            myWriter.write("");
+            myWriter.write(String.valueOf((Object) jsonObject));*/
+            System.out.println("File already exists." + notifications.getDevice_id().toString());
+
+
+    } catch(
+    IOException e)
+
+    {
+        System.out.println("An error occurred.");
+        e.printStackTrace();
+    }
 }
+}
+
+
 

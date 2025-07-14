@@ -21,6 +21,9 @@ public interface MeterRepo extends JpaRepository<Meterdataresponse, Integer> {
 
     @Query(nativeQuery = true, value = "SELECT  *  FROM dataresponse where estateid=? and (device_typeid = 2 or device_typeid =3 ) ORDER BY date DESC LIMIT 1")
     Meterdataresponse meterEnergy(Integer estateid);
+
+    @Query(nativeQuery = true, value = "SELECT  *  FROM dataresponse where macaddress=? and (device_typeid = 2 or device_typeid =3 ) ORDER BY date DESC LIMIT 1")
+    Meterdataresponse meterData(String mac);
     @Query(nativeQuery = true, value = "SELECT month(date),(MAX(total_energy) - MIN(total_energy))  as kW FROM `dataresponse` WHERE macaddress = ? GROUP by month(date ) ORDER  BY DESC  LIMIT 1")
     Meterdataresponse monthlyUsage(String macaddress);
 

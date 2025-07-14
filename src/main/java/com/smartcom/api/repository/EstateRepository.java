@@ -15,6 +15,8 @@ import java.util.List;
 
 @Repository
 public interface EstateRepository extends JpaRepository<Estate, Integer> {
+
+
     @Transactional
     @Modifying
     @Query("UPDATE Estate t set t.delete_status = true WHERE t.estateid = :estateid")
@@ -65,5 +67,5 @@ public interface EstateRepository extends JpaRepository<Estate, Integer> {
     List<Estate> findAllByUsers(User user);*/
     @Query("from Estate e where e.user.userid =:userid and e.delete_status = false")
     Estate findByUserID(@Param("userid") Integer userid);
-    // User findByConfirmationToken(String confirmationToken);
+
 }

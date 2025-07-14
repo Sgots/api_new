@@ -31,11 +31,20 @@ public interface DeviceRepository extends JpaRepository<Devices, Integer> {
     @Modifying
     @Query("UPDATE Devices  t set t.delete_status = true WHERE t.deviceid = :deviceid")
     void findByDeviceIdDelete(Integer deviceid);
-
+    @Transactional
+    @Modifying
+    @Query("UPDATE Devices  t set t.active = :state WHERE t.macaddress = :mac")
+    void findByMacAndSwitch(@Param("mac") String mac,
+                            @Param("state") Boolean state);
     @Transactional
     @Modifying
     @Query("UPDATE Devices  t set t.hasEvent = true WHERE t.macaddress = :mac")
     void findByDeviceIdEvent(String mac);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE Devices  t set t.enabled = :state WHERE t.macaddress = :mac")
+    void findByDeviceIdOnline(String mac, Boolean state);
 
     @Transactional
     @Modifying
@@ -47,7 +56,7 @@ public interface DeviceRepository extends JpaRepository<Devices, Integer> {
     @Query("UPDATE Devices  t set t.delete_status = true WHERE t.estate.estateid = :estateid")
     void findByEstateIdAndDelete(Integer estateid);
 
-    @Query("from Devices e where e.estate.estateid =:estateid and e.delete_status = false and (e.deviceTypes.typeid='1' or e.deviceTypes.typeid='2' or e.deviceTypes.typeid='3' or e.deviceTypes.typeid='4')")
+    @Query("from Devices e where e.estate.estateid =:estateid and e.delete_status = false and (e.deviceTypes.typeid='1' or e.deviceTypes.typeid='2' or e.deviceTypes.typeid='3' or e.deviceTypes.typeid='4') ORDER BY e.deviceid DESC")
     List<Devices> findAllByEstateId(@Param("estateid") Integer estateid);
 
     @Query("from Devices e where (e.deviceTypes.typeid='2' OR e.deviceTypes.typeid='3') and (e.estate.estateid =:estateid and e.delete_status=false)  ")
@@ -75,6 +84,17 @@ public interface DeviceRepository extends JpaRepository<Devices, Integer> {
                                @Param("powerAction") Integer powerAction,
                                @Param("energy") Integer energy,
                                @Param("energyAction") Integer energyAction);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE Devices t set t.remainingCredit=:remaining_credit, t.remainingEnergy=:remaining_energy, t.currentPower=:current_power, t.energyUsed=:energy_used, t.costToday=:cost_today WHERE t.macaddress=:macaddress")
+    void updateDeviceDataresponse(@Param("macaddress") String macaddress,
+                               @Param("remaining_credit") Double remaining_credit,
+                               @Param("remaining_energy") Double remaining_energy,
+                               @Param("current_power") Double current_power,
+                               @Param("energy_used") Double energy_used,
+                               @Param("cost_today") Double cost_today);
+
 
     // User findByConfirmationToken(String confirmationToken);
     @Query("from Devices e where e.estate.estateid =:estateid and e.delete_status=false and e.deviceTypes.typeid='4'")
